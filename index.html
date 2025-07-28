@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>لعبة حجر ورقة مقص أونلاين</title>
+  <style>
+    body {
+      font-family: Tahoma, sans-serif;
+      text-align: center;
+      background: linear-gradient(to bottom, #e0f7fa, #fff);
+      padding: 30px;
+    }
+
+    h1 {
+      color: #00796b;
+    }
+
+    button {
+      font-size: 24px;
+      padding: 10px 20px;
+      margin: 10px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      background-color: #009688;
+      color: white;
+      transition: transform 0.2s ease;
+    }
+
+    button:hover {
+      transform: scale(1.1);
+    }
+
+    #result {
+      margin-top: 30px;
+      font-size: 24px;
+      font-weight: bold;
+    }
+  </style>
+  <script type="module">
+    // استيراد Firebase من CDN
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    // إعدادات Firebase الخاصة بك
+    const firebaseConfig = {
+      apiKey: "AIzaSyDVArArvEDYGC5O5_xdGe9byZCI5ZDZ9p4",
+      authDomain: "rps-online-game-8ef85.firebaseapp.com",
+      databaseURL: "https://rps-online-game-8ef85-default-rtdb.firebaseio.com",
+      projectId: "rps-online-game-8ef85",
+      storageBucket: "rps-online-game-8ef85.appspot.com",
+      messagingSenderId: "597782563294",
+      appId: "1:597782563294:web:3e18fd2208e8438bc2dce5"
+    };
+
+    // تهيئة Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // تعديل هذه المتغيرات حسب اللاعب (player1 أو player2)
+    const myId = "player1";
+    const opponentId = "player2";
+
+    // إرسال الحركة إلى قاعدة البيانات
+    function sendMove(move) {
+      set(ref(db, "players/" + myId), {
+        move: move,
+        timestamp: Date.now()
+      });
+    }
+
+    let myMove = null;
+    let opponentMove = null;
+
+    function compareMoves() {
+      if (!myMove || !opponentMove) return;
+
+      const resultDiv = document.getElementById("result");
+
+      if (myMove === opponentMove) {
+        resultDiv.innerText = "🤝 تعادل! كل من اختار " + myMove;
+      } else if (
+        (myMove === "rock" && opponentMove === "scissors") ||
+        (myMove === "paper" && opponentMove === "rock") ||
+        (myMove === "scissors" && opponentMove === "paper")
+      ) {
+        resultDiv.innerText = "🏆 فزت! أنت اخترت " + myMove + " والخصم " + opponentMove;
+      } else {
+        resultDiv.innerText = "😢 خسرت! أنت اخترت " + myMove + " والخصم " + opponentMove;
+      }
+    }
+
+    function listenToOpponent() {
+      const opponentRef = ref(db, "players/" + opponentId);
+      onValue(opponentRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          opponentMove = data.move;
+          compareMoves();
+        }
+      });
+    }
+
+    window.onload = () => {
+      listenToOpponent();
+    };
+
+    window.play = (move) => {
+      myMove = move;
+      sendMove(move);
+      compareMoves();
+    };
+  </script>
+</head>
+<body>
+  <h1>🪨📄✂️ لعبة حجر ورقة مقص أونلاين</h1>
+  <p>اختر حركتك:</p>
+  <button onclick="play('rock')">🪨 حجر</button>
+  <button onclick="play('paper')">📄 ورقة</button>
+  <button onclick="play('scissors')">✂️ مقص</button>
+
+  <div id="result">في انتظار الحركة...</div>
+</body>
+  </html>
